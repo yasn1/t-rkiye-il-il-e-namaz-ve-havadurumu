@@ -1,4 +1,4 @@
-# Adhan Weather
+# Ezan Saatleri & Hava Durumu
 
 Türkiye'deki il ve ilçeler için anlık hava durumu ve namaz vakitlerini görüntüleyen bir web uygulamasıdır. Kullanıcıların konumlarına veya aradıkları il/ilçeye göre detaylı hava durumu ve ezan vakitlerini sunar.
 
