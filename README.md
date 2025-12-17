@@ -19,8 +19,8 @@ Türkiye'deki il ve ilçeler için anlık hava durumu ve namaz vakitlerini gör�
 
 1. Bu projeyi bilgisayarınıza klonlayın:
    ```bash
-   git clone https://github.com/kullaniciadi/adhan-weather.git
-   cd adhan-weather
+   git clone https://github.com/yasn1/t-rkiye-il-il-e-namaz-ve-havadurumu.git
+   cd t-rkiye-il-il-e-namaz-ve-havadurumu
    ```
 
 2. Gerekli paketleri yükleyin:
