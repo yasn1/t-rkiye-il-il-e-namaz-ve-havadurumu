@@ -26,5 +26,6 @@ app.use(express.json());
 app.use(require("./routers/client.js"));
 
 app.listen(PORT,() => {
-    os.networkInterfaces()["Wi-Fi 2"].filter(x => x.family === "IPv4").map(x => console.log(color("green",`Server Listening on: http://${x.address}:${PORT}`)));
+    os.networkInterfaces()["Wi-Fi 2"]?.filter(x => x.family === "IPv4").map(x => console.log(color("green",`Server Listening on: http://${x.address}:${PORT}`)));
+
 })
