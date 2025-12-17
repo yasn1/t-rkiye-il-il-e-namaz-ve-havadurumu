@@ -92,4 +92,4 @@ Uygulama ayrıca JSON formatında veri döndüren API uç noktalarına sahiptir:
 
 ## Lisans
 
-Bu proje ISC lisansı ile lisanslanmıştır.
+Bu proje MIT lisansı ile lisanslanmıştır.
