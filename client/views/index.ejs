@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Namaz Vakitleri</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="weather"></div>
+    <main class="container mx-auto">
+        <h1>Namaz Vakitleri</h1>
+        <div class="column">
+            <form action="" id="form">
+                <input type="text" name="district" id="district" placeholder="İl / İlçe" required>
+                <button type="submit" class="p-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                </button>
+                <button type="button" id="current"
+                    class="p-2 bg-green-500 text-white rounded-md ml-2 hover:bg-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </main>
+    <script>
+        document.getElementById("form").addEventListener("submit", (e) => {
+            showLoading();
+            e.preventDefault();
+            const district = document.getElementById("district").value;
+            fetch("/weather", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ district }),
+                timeout: 10000
+            }).then(res => res.json()).then(data => {
+                hideLoading();
+                if (data.status != 200) {
+                    error(data.message);
+                } else {
+                    hideLoading();
+                    weather(data)
+                }
+            }).catch(err => {
+                hideLoading();
+                error("Veriler alınamadı.")
+            })
+
+        })
+        document.getElementById("current").addEventListener("click", () => {
+            showLoading();
+            navigator.permissions.query({ name: 'geolocation' }).then((permissionStatus) => {
+                if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        fetch("/current", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({ lat, lon })
+                        }).then(res => res.json()).then(data => {
+                            hideLoading();
+                            weather(data)
+                        })
+                    }, (err) => {
+                        hideLoading();
+                        if (err.code === err.PERMISSION_DENIED) {
+                            error("Konum izni alınamadı.")
+                        } else {
+                            error("Konum alınamadı.")
+                        }
+                    });
+                } else if (permissionStatus.state === 'denied') {
+                    hideLoading();
+                    error("Geolocation izni reddedildi.")
+                }
+            });
+        })
+
+
+
+
+        function error(message) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        function showLoading() {
+            Swal.fire({
+                title: "Veriler Alınıyor",
+                text: "Lütfen bekleyin...",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+        function hideLoading() {
+            Swal.close();
+        }
+        function toMinutes(time) {
+            const [h, m] = time.split(":").map(Number);
+            return h * 60 + m;
+        }
+        const now = new Date();
+        
+
+
+
+        function weather(d) {
+            const { data } = d;
+            let times = Object.values(data.adhan).map(toMinutes);
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            const usages = {upcoming:1,past:7,now:1}
+            times.forEach((d,i) => {
+                if(d<=nowMinutes && times[i+1]>=nowMinutes && usages.now>0){
+                    times[i] = "now";
+                    usages.now-=1;
+                }else if(d>=nowMinutes && usages.upcoming>0){
+                    times[i] = "upcoming";
+                    usages.upcoming-=1;
+                }else if(d<nowMinutes){
+                    times[i] = "past";
+                }else{
+                    times[i] = "";
+                }
+            })
+            
+            document.getElementById("weather").style.display = "flex";
+            document.getElementById("weather").innerHTML = `
+            <button onclick="hideWeather()" class="absolute top-2 right-2 text-gray-600 hover:text-gray-900">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <img src="${data.weather.icon}" alt="">
+            <h2>${data.province.province}${data.province.district ? ` / ${data.province.district}` : ""} şu an ${data.weather.description} ${data.weather.temperature}°C</h2>
+            <div class="mt-4 w-full">
+                <h3 class="text-lg font-semibold mb-2">Namaz Vakitleri</h3>
+                <table class="w-full text-left">
+                    <tbody>
+                        ${Object.entries(data.adhan).map(([key, value],i) => `
+                            <tr>
+                                <td class="py-1 pr-4 font-medium ${times[i]}">${key}</td>
+                                <td class="py-1">${value}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            `
+        }
+        function hideWeather() {
+            document.getElementById("weather").style.animation = "fade-out 0.5s ease-in-out";
+            setTimeout(() => {
+                document.getElementById("weather").style.display = "none";
+                document.getElementById("weather").style.animation = ""
+            }, 400);
+        }
+    </script>
+</body>
+
+</html>
